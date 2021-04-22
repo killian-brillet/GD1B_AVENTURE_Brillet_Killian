@@ -16,6 +16,7 @@ var ennemi
 var etatennemi
 var tirballe
 var balle
+var drop = 0
 
 class Scenetwo extends Phaser.Scene{
     constructor(){
@@ -30,7 +31,7 @@ class Scenetwo extends Phaser.Scene{
         this.load.image('tuile', 'assets/obstacles.png')
         this.load.image('door', 'assets/porte.png');
         this.load.image('fond', 'assets/sol.png');
-        this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 30, frameHeight: 60 });
+        this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 40, frameHeight: 40 });
         this.load.spritesheet('ennemi', 'assets/monstre.png', { frameWidth: 21, frameHeight: 40 });
         this.load.image('menu', 'assets/menu.png');
         /*this.load.image('platform', 'assets/platform.png');*/
@@ -54,14 +55,16 @@ class Scenetwo extends Phaser.Scene{
         /*platforms = this.physics.add.staticGroup();
         platforms.create(400, 360, 'platform')*/
     
-        ennemi = this.physics.add.sprite(800, 360, 'ennemi')
+        ennemi = this.physics.add.sprite(800, 270, 'ennemi')
+        ennemi.setScale(1.2)
         etatennemi = 1
     
         player = this.physics.add.sprite(300, 360, 'perso');
         player.setCollideWorldBounds(true);
-        player.body.height = 30;
-        player.body.setOffset(0, 30);
+        player.body.height = 20;
+        player.body.setOffset(0, 20);
 
+        objetun = this.physics.add.sprite(300, 100, 'objet');
         objetdeux = this.physics.add.sprite(750, 200, 'objet');
         objettrois = this.physics.add.sprite(750, 500, 'objet');
 
@@ -75,9 +78,8 @@ class Scenetwo extends Phaser.Scene{
         /*this.physics.add.collider(player, platforms)*/
 
         this.physics.add.collider(player, obstacles);
-        /*this.physics.add.collider(player, portes);*/
 
-        this.physics.add.collider(player, portes, nicoleouvre, null, this)
+        this.physics.add.collider(player, portes, ouverture, null, this)
 
         this.physics.add.overlap(player, ennemi, hitEnnemi, null, this);
 
@@ -85,16 +87,17 @@ class Scenetwo extends Phaser.Scene{
         this.physics.add.overlap(player, objetdeux, objet2, null, this);
         this.physics.add.overlap(player, objettrois, objet3, null, this);
 
-        function nicoleouvre(player, portes){
+        function ouverture(player, portes){
             if (comptobj1 == 1){
                 portes.disableBody(true, true);
             }
         }
 
         function hitEnnemi(player, ennemi){
-            player.setTint(0xFF6E6E)
+            /*player.setTint(0xFF6E6E)
             this.physics.pause();
-            gameOver = true;
+            gameOver = true;*/
+            
         }
 
         function objet1(player, objetun){
@@ -115,8 +118,6 @@ class Scenetwo extends Phaser.Scene{
     }
     
     update() {
-
-        console.log("scene 2")
         
         if (gameOver)
         {
@@ -146,7 +147,7 @@ class Scenetwo extends Phaser.Scene{
             player.setVelocityY(300);
         }
 
-        if (player.y <= 50){
+        if (player.y <= 30){
             this.scene.start("scenetrois")
         }
 
@@ -164,9 +165,10 @@ class Scenetwo extends Phaser.Scene{
             balle.setVelocityX(100);
         }*/
 
-        if (etatennemi == 0){
+        if (etatennemi == 0 && drop == 0){
+            drop = 1
             dropcle = this.physics.add.sprite(ennemi.x, ennemi.y, 'objet');
-            this.physics.add.overlap(player, dropcle, objet1, null, this);
+            this.physics.add.collider(player, dropcle, objet1, null, this);
         }
 
         function objet1(player, dropcle){
@@ -174,6 +176,13 @@ class Scenetwo extends Phaser.Scene{
             comptobj1 = 1;
             this.add.text(20,20, "Objet 1")
         }
+
+        if (ennemi.y <= 271){
+            ennemi.setVelocityY(100)
+        }
+
+        if (ennemi.y >= 600){
+            ennemi.setVelocityY(-100)
+        }
     }
-    
 }
