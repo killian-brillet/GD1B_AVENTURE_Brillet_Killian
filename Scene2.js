@@ -1,21 +1,36 @@
 var player
-var platforms
+
 var dropcle
-var objetun
-var objetdeux
-var objettrois
+var cle
+var potion
+var bombe
+var thune
+
+var gameOver
+var cursors
+
 var comptobj1
 var comptobj2
 var comptobj3
-var porte
-var thune
-var gameOver
-var cursors
 var explosion
+
+var platforms
+var porte
+
 var ennemi
 var etatennemi
-var tirballe
+
+var left
+var right
+var up
+var down
 var balle
+
+var vie = 3
+var timer = 0
+var inv = false
+var afficheVie
+
 var drop = 0
 
 class Scenetwo extends Phaser.Scene{
@@ -34,9 +49,14 @@ class Scenetwo extends Phaser.Scene{
         this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 40, frameHeight: 40 });
         this.load.spritesheet('ennemi', 'assets/monstre.png', { frameWidth: 21, frameHeight: 40 });
         this.load.image('menu', 'assets/menu.png');
-        /*this.load.image('platform', 'assets/platform.png');*/
-        this.load.image('objet', 'assets/objet.png');
+        this.load.image('bomb', 'assets/bombe.png');
+        this.load.image('pot', 'assets/potion.png');
+        this.load.image('key', 'assets/cle.png');
         this.load.image('balle', 'assets/balle.png');
+        this.load.image('trois', 'assets/trois.png');
+        this.load.image('deux', 'assets/deux.png');
+        this.load.image('un', 'assets/un.png');
+        this.load.image('dead', 'assets/dead.png');
     }
     
     create() {
@@ -64,16 +84,20 @@ class Scenetwo extends Phaser.Scene{
         player.body.height = 20;
         player.body.setOffset(0, 20);
 
-        objetun = this.physics.add.sprite(300, 100, 'objet');
-        objetdeux = this.physics.add.sprite(750, 200, 'objet');
-        objettrois = this.physics.add.sprite(750, 500, 'objet');
+        potion = this.physics.add.sprite(1150, 625, 'pot');
+        bombe = this.physics.add.sprite(800, 300, 'bomb');
+
+        this.afficheVie = this.add.image(100, 100, 'trois');
 
         /*porte = this.physics.add.staticGroup();
         porte.create(900, 360, 'door')*/
     
         cursors = this.input.keyboard.createCursorKeys();
         explosion = this.input.keyboard.addKeys('F');
-        tirballe = this.input.keyboard.addKeys('Z','Q','S','D');
+        left = this.input.keyboard.addKeys('Q');
+        right = this.input.keyboard.addKeys('D');
+        up = this.input.keyboard.addKeys('Z');
+        down = this.input.keyboard.addKeys('S');
     
         /*this.physics.add.collider(player, platforms)*/
 
@@ -83,39 +107,73 @@ class Scenetwo extends Phaser.Scene{
 
         this.physics.add.overlap(player, ennemi, hitEnnemi, null, this);
 
-        this.physics.add.overlap(player, objetun, objet1, null, this);
-        this.physics.add.overlap(player, objetdeux, objet2, null, this);
-        this.physics.add.overlap(player, objettrois, objet3, null, this);
+        this.physics.add.overlap(player, potion, dropPot, null, this);
+        this.physics.add.overlap(player, bombe, dropBomb, null, this);
 
         function ouverture(player, portes){
             if (comptobj1 == 1){
-                portes.disableBody(true, true);
+                portes.destroy(true, true);
             }
         }
 
         function hitEnnemi(player, ennemi){
-            /*player.setTint(0xFF6E6E)
-            this.physics.pause();
-            gameOver = true;*/
-            
+            if (inv === false){
+                inv = true;
+                vie--;
+                if (vie === 2){
+                    this.afficheVie = this.add.image(100, 100, 'deux')
+                }
+                if (vie === 1){
+                    this.afficheVie = this.add.image(100, 100, 'un')
+                }
+                player.setTint(0xff0000);
+                if (vie === 0){
+                    this.physics.pause();
+                    this.afficheVie = this.add.image(100, 100, 'dead')
+                    this.scene.start("sceneun")
+                }
+            }  
         }
 
-        function objet1(player, objetun){
-            objetun.disableBody(true, true);
+        function dropKey(player, cle){
+            cle.disableBody(true, true);
             comptobj1 = 1;
-            this.add.text(20,20, "Objet 1")
+            this.add.text(20,20, "CLE")
         }
-        function objet2(player, objetdeux){
-            objetdeux.disableBody(true, true);
+        function dropPot(player, potion){
+            potion.disableBody(true, true);
             comptobj2 = 1;
-            this.add.text(200,20, "Objet 2")
+            this.add.text(200,20, "POTION")
         }
-        function objet3(player, objettrois){
-            objettrois.disableBody(true, true);
+        function dropBomb(player, bombe){
+            bombe.disableBody(true, true);
             comptobj3 = 1;
-            this.add.text(400,20, "Objet 3")
+            this.add.text(400,20, "BOMBE")
         }
+
+        /* Animations*/
+
+        this.anims.create({
+            key: 'immo',
+            frames: [ { key: 'perso', frame: 0} ],
+            framerate : 10
+        });
+
+        this.anims.create({
+            key: 'deplacement',
+            frames: this.anims.generateFrameNumbers('perso', { start: 1, end: 2 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'ennemi',
+            frames: this.anims.generateFrameNumbers('ennemi', { start: 0, end: 1 }),
+            frameRate: 2,
+            repeat: -1
+        });
     }
+
     
     update() {
         
@@ -124,27 +182,36 @@ class Scenetwo extends Phaser.Scene{
             return;
         }
         player.setVelocity(0);
-    
+        ennemi.anims.play('ennemi', true);
+
         if (cursors.right.isDown)
         {
             player.setVelocityX(300);
             player.setFlipX(false);
+            player.anims.play('deplacement', true);
         }
     
-        else if (cursors.left.isDown)
+        if (cursors.left.isDown)
         {
             player.setVelocityX(-300);
             player.setFlipX(true);
+            player.anims.play('deplacement', true);
         }
     
         if (cursors.up.isDown)
         {
             player.setVelocityY(-300);
+            player.anims.play('deplacement', true);
         }
     
         if (cursors.down.isDown)
         {
             player.setVelocityY(300);
+            player.anims.play('deplacement', true);
+        }
+
+        else {
+            player.anims.play('immo', true);
         }
 
         if (player.y <= 30){
@@ -158,8 +225,11 @@ class Scenetwo extends Phaser.Scene{
             etatennemi = 0
         }
 
-        
-        /*if (tirballe.D.isDown){
+        /*const tirgauche = Phaser.Input.Keyboard.JustDown(left.A);
+        const tirdroite = Phaser.Input.Keyboard.JustDown(right.D);
+        const tirbas = Phaser.Input.Keyboard.JustDown(down.S);
+        const tirhaut = Phaser.Input.Keyboard.JustDown(up.Z);
+        if (tirdroite){
             console.log("test")
             balle = this.physics.add.sprite(player.x, player.y, 'balle')
             balle.setVelocityX(100);
@@ -167,22 +237,31 @@ class Scenetwo extends Phaser.Scene{
 
         if (etatennemi == 0 && drop == 0){
             drop = 1
-            dropcle = this.physics.add.sprite(ennemi.x, ennemi.y, 'objet');
-            this.physics.add.collider(player, dropcle, objet1, null, this);
+            dropcle = this.physics.add.sprite(ennemi.x, ennemi.y, 'key');
+            this.physics.add.collider(player, dropcle, dropKey, null, this);
         }
 
-        function objet1(player, dropcle){
+        function dropKey(player, dropcle){
             dropcle.disableBody(true, true);
             comptobj1 = 1;
-            this.add.text(20,20, "Objet 1")
+            this.add.text(20,20, "CLÉ")
         }
 
-        if (ennemi.y <= 271){
-            ennemi.setVelocityY(100)
+        if (ennemi.y <= 270){
+            ennemi.setVelocityY(200)
         }
 
         if (ennemi.y >= 600){
-            ennemi.setVelocityY(-100)
+            ennemi.setVelocityY(-200)
+        }
+
+        if (inv === true){
+            timer++;
+            if (timer === 180){
+                timer = 0;
+                player.setTint(0xffffff);
+                inv = false;
+            }
         }
     }
 }
