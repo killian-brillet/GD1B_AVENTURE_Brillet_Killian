@@ -1,31 +1,27 @@
-var entree;
-var vie
-var comptobj1
-var comptobj2
-var comptobj3
+var entree
 
-class Sceneone extends Phaser.Scene{
+class Scenesix extends Phaser.Scene{
     constructor(){
-        super("sceneun");
+        super("scenesix");
     }
 
     init(data){
     }
 
     preload(){
-        this.load.image('menu', 'assets/menu.png');
+        this.load.image('gagne', 'assets/win.png');
     }
 
     create(){
         vie = 3
         entree = entree = this.input.keyboard.addKeys('enter');
-        this.add.image(640, 360, 'menu')
+        this.add.image(640, 360, 'gagne')
     }
 
     update(){
         const passer = Phaser.Input.Keyboard.JustDown(entree.enter);
         if (passer){
-            this.scene.start("scenedeux")
+            this.scene.start("sceneun")
         }
     }
 }

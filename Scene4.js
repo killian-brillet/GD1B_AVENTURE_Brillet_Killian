@@ -5,7 +5,6 @@ var cle
 var potion
 var bombe
 var thune
-var fin
 
 var textecle
 var textepot
@@ -21,6 +20,7 @@ var platforms
 var porte
 
 var ennemi
+var ennemi2
 var etatennemi
 
 var left
@@ -35,16 +35,16 @@ var afficheVie
 
 var drop = 0
 
-class Scenethree extends Phaser.Scene{
+class Scenefour extends Phaser.Scene{
     constructor(){
-        super("scenetrois");
+        super("scenequatre");
     }
 
     init(data){
     }
 
     preload() {
-        this.load.tilemapTiledJSON('carte', 'tiled/Carte2.json');
+        this.load.tilemapTiledJSON('carte3', 'tiled/Carte3.json');
         this.load.image('tuile', 'assets/obstacles.png')
         this.load.image('door', 'assets/porte.png');
         this.load.image('fond', 'assets/sol.png');
@@ -59,13 +59,12 @@ class Scenethree extends Phaser.Scene{
         this.load.image('deux', 'assets/deux.png');
         this.load.image('un', 'assets/un.png');
         this.load.image('dead', 'assets/dead.png');
-        this.load.image('finish', 'assets/finish.png')
     }
     
     create() {
         this.add.image(640, 360, 'menu')
 
-        const map = this.make.tilemap({key: 'carte'});
+        const map = this.make.tilemap({key: 'carte3'});
         const tuilesobstacles = map.addTilesetImage('obstacle','tuile');
         const tuilesportes = map.addTilesetImage('porte','door');
         const tuilessol = map.addTilesetImage('sol','fond');
@@ -75,43 +74,48 @@ class Scenethree extends Phaser.Scene{
         obstacles.setCollisionByExclusion(-1, true);
         portes.setCollisionByExclusion(-1, true)
     
-        ennemi = this.physics.add.sprite(900, 400, 'ennemi')
+    
+        ennemi = this.physics.add.sprite(900, 270, 'ennemi')
         ennemi.setScale(1.2)
         etatennemi = 1
-
-        fin = this.physics.add.sprite(1000, 580, 'finish') 
-        fin.setScale(0.6)
+        ennemi2 = this.physics.add.sprite(400, 270, 'ennemi')
+        ennemi2.setScale(1.2)
     
-        player = this.physics.add.sprite(663, 690, 'perso');
+        player = this.physics.add.sprite(70, 370, 'perso');
         player.setCollideWorldBounds(true);
         player.body.height = 20;
         player.body.setOffset(0, 20);
+
+
+        potion = this.physics.add.sprite(1155, 360, 'pot');
+        bombe = this.physics.add.sprite(640, 360, 'bomb');
     
         cursors = this.input.keyboard.createCursorKeys();
+        explosion = this.input.keyboard.addKeys('F');
+        utilpot = this.input.keyboard.addKeys('E');
         /*left = this.input.keyboard.addKeys('Q');
         right = this.input.keyboard.addKeys('D');
         up = this.input.keyboard.addKeys('Z');
         down = this.input.keyboard.addKeys('S');*/
-
+    
+        /*this.physics.add.collider(player, platforms)*/
 
         this.physics.add.collider(player, obstacles);
 
         this.physics.add.collider(player, portes, ouverture, null, this)
 
         this.physics.add.overlap(player, ennemi, hitEnnemi, null, this);
-        this.physics.add.overlap(player, fin, hitFin, null, this);
+        this.physics.add.overlap(player, ennemi2, hitEnnemi, null, this);
 
         this.physics.add.overlap(player, potion, dropPot, null, this);
         this.physics.add.overlap(player, bombe, dropBomb, null, this);
 
         function ouverture(player, portes){
             if (comptobj1 == 1){
-                portes.destroy(true, true);
+                tuilesportes.destroy(true);
+                comptobj1 = 0
+                textecle.visible = false;
             }
-        }
-
-        function hitFin(player, fin){
-            this.scene.start("scenesix")
         }
 
         function hitEnnemi(player, ennemi){
@@ -136,17 +140,17 @@ class Scenethree extends Phaser.Scene{
         function dropKey(player, cle){
             cle.disableBody(true, true);
             comptobj1 = 1;
-            this.add.text(20,20, "CLE")
+            textecle = this.add.text(20,20, "CLE")
         }
         function dropPot(player, potion){
             potion.disableBody(true, true);
             comptobj2 = 1;
-            this.add.text(200,20, "POTION")
+            textepot = this.add.text(200,20, "POTION")
         }
         function dropBomb(player, bombe){
             bombe.disableBody(true, true);
             comptobj3 = 1;
-            this.add.text(400,20, "BOMBE")
+            textebomb = this.add.text(400,20, "BOMBE")
         }
 
         /* Animations*/
@@ -171,13 +175,16 @@ class Scenethree extends Phaser.Scene{
             repeat: -1
         });
     }
+
     
     update() {
-
-        if (comptobj1 == 1){
-            textecle = this.add.text(20,20, "CLE")
-        }
         
+        if (gameOver)
+        {
+            return;
+        }
+        player.setVelocity(0);
+        ennemi.anims.play('ennemi', true);
 
         if (vie == 2){
             this.afficheVie = this.add.image(100, 100, 'deux');
@@ -191,13 +198,6 @@ class Scenethree extends Phaser.Scene{
         else{
             this.afficheVie = this.add.image(100, 100, 'trois');
         }
-
-        if (gameOver)
-        {
-            return;
-        }
-        player.setVelocity(0);
-        ennemi.anims.play('ennemi', true);
 
         if (cursors.right.isDown)
         {
@@ -229,7 +229,7 @@ class Scenethree extends Phaser.Scene{
             player.anims.play('immo', true);
         }
 
-        if (player.y >= 700){
+        if (player.x <= 30){
             this.scene.start("scenedeux")
         }
 
@@ -237,7 +237,17 @@ class Scenethree extends Phaser.Scene{
         if (comptobj3 == 1 && dynamite){
             comptobj3 == 0
             ennemi.disableBody(true, true);
+            ennemi2.disableBody(true, true);
             etatennemi = 0
+            textebomb.visible = false;
+        }
+
+        const heal = Phaser.Input.Keyboard.JustDown(utilpot.E);
+        if (comptobj2 == 1 && heal){
+            comptobj2 = 0
+            vie = 3
+            this.afficheVie = this.add.image(100, 100, 'trois')
+            textepot.visible = false;
         }
 
         /*const tirgauche = Phaser.Input.Keyboard.JustDown(left.A);
@@ -259,15 +269,23 @@ class Scenethree extends Phaser.Scene{
         function dropKey(player, dropcle){
             dropcle.disableBody(true, true);
             comptobj1 = 1;
-            this.add.text(20,20, "CLÉ")
+            textecle = this.add.text(20,20, "CLÉ")
         }
 
-        if (ennemi.x <= 900){
-            ennemi.setVelocityX(200)
+        if (ennemi.y <= 270){
+            ennemi.setVelocityY(200)
         }
 
-        if (ennemi.x >= 1100){
-            ennemi.setVelocityX(-200)
+        if (ennemi.y >= 600){
+            ennemi.setVelocityY(-200)
+        }
+
+        if (ennemi2.y <= 270){
+            ennemi2.setVelocityY(200)
+        }
+
+        if (ennemi2.y >= 600){
+            ennemi2.setVelocityY(-200)
         }
 
         if (inv === true){
@@ -279,5 +297,4 @@ class Scenethree extends Phaser.Scene{
             }
         }
     }
-    
 }
