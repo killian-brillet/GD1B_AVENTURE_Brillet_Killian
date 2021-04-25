@@ -46,34 +46,29 @@ class Scenethree extends Phaser.Scene{
     preload() {
         this.load.tilemapTiledJSON('carte', 'tiled/Carte2.json');
         this.load.image('tuile', 'assets/obstacles.png')
-        this.load.image('door', 'assets/porte.png');
         this.load.image('fond', 'assets/sol.png');
         this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 40, frameHeight: 40 });
         this.load.spritesheet('ennemi', 'assets/monstre.png', { frameWidth: 21, frameHeight: 40 });
         this.load.image('menu', 'assets/menu.png');
-        this.load.image('bomb', 'assets/bombe.png');
-        this.load.image('pot', 'assets/potion.png');
         this.load.image('key', 'assets/cle.png');
-        this.load.image('balle', 'assets/balle.png');
         this.load.image('trois', 'assets/trois.png');
         this.load.image('deux', 'assets/deux.png');
         this.load.image('un', 'assets/un.png');
         this.load.image('dead', 'assets/dead.png');
         this.load.image('finish', 'assets/finish.png')
+        this.load.image('porte2','assets/porte3.png')
     }
     
     create() {
+        scenearrive = 1
         this.add.image(640, 360, 'menu')
 
         const map = this.make.tilemap({key: 'carte'});
         const tuilesobstacles = map.addTilesetImage('obstacle','tuile');
-        const tuilesportes = map.addTilesetImage('porte','door');
         const tuilessol = map.addTilesetImage('sol','fond');
         const arriereplan = map.createLayer('Sol', tuilessol, 0, 0);
-        const portes = map.createLayer('Porte', tuilesportes, 0, 0)
         const obstacles = map.createLayer('Obstacle', tuilesobstacles, 0, 0);
         obstacles.setCollisionByExclusion(-1, true);
-        portes.setCollisionByExclusion(-1, true)
     
         ennemi = this.physics.add.sprite(900, 400, 'ennemi')
         ennemi.setScale(1.2)
@@ -87,26 +82,36 @@ class Scenethree extends Phaser.Scene{
         player.body.height = 20;
         player.body.setOffset(0, 20);
     
-        cursors = this.input.keyboard.createCursorKeys();
-        /*left = this.input.keyboard.addKeys('Q');
-        right = this.input.keyboard.addKeys('D');
-        up = this.input.keyboard.addKeys('Z');
-        down = this.input.keyboard.addKeys('S');*/
+        porte = this.physics.add.sprite(1000, 490, 'porte2')
+        porte.setImmovable(true)
 
+        cursors = this.input.keyboard.createCursorKeys();
+        explosion = this.input.keyboard.addKeys('F');
+        utilpot = this.input.keyboard.addKeys('E');
+
+        if (comptobj1 == 1){
+            textecle = this.add.text(20,20, "CLE")
+        }
+        if (comptobj2 == 1){
+            textepot = this.add.text(200,20, "POTION")
+        }
+        if (comptobj3 == 1){
+            textebomb = this.add.text(400,20, "BOMBE")
+        }
 
         this.physics.add.collider(player, obstacles);
 
-        this.physics.add.collider(player, portes, ouverture, null, this)
+        this.physics.add.collider(player, porte, ouverture, null, this)
 
         this.physics.add.overlap(player, ennemi, hitEnnemi, null, this);
         this.physics.add.overlap(player, fin, hitFin, null, this);
 
-        this.physics.add.overlap(player, potion, dropPot, null, this);
-        this.physics.add.overlap(player, bombe, dropBomb, null, this);
-
-        function ouverture(player, portes){
+        function ouverture(player, porteune){
             if (comptobj1 == 1){
-                portes.destroy(true, true);
+                porte.destroy();
+                etatscene2 = 1
+                comptobj1 = 0
+                textecle.visible = false;
             }
         }
 
@@ -138,18 +143,6 @@ class Scenethree extends Phaser.Scene{
             comptobj1 = 1;
             this.add.text(20,20, "CLE")
         }
-        function dropPot(player, potion){
-            potion.disableBody(true, true);
-            comptobj2 = 1;
-            this.add.text(200,20, "POTION")
-        }
-        function dropBomb(player, bombe){
-            bombe.disableBody(true, true);
-            comptobj3 = 1;
-            this.add.text(400,20, "BOMBE")
-        }
-
-        /* Animations*/
 
         this.anims.create({
             key: 'immo',
@@ -174,11 +167,6 @@ class Scenethree extends Phaser.Scene{
     
     update() {
 
-        if (comptobj1 == 1){
-            textecle = this.add.text(20,20, "CLE")
-        }
-        
-
         if (vie == 2){
             this.afficheVie = this.add.image(100, 100, 'deux');
         }
@@ -196,6 +184,7 @@ class Scenethree extends Phaser.Scene{
         {
             return;
         }
+
         player.setVelocity(0);
         ennemi.anims.play('ennemi', true);
 
@@ -206,20 +195,20 @@ class Scenethree extends Phaser.Scene{
             player.anims.play('deplacement', true);
         }
     
-        if (cursors.left.isDown)
+        else if (cursors.left.isDown)
         {
             player.setVelocityX(-300);
             player.setFlipX(true);
             player.anims.play('deplacement', true);
         }
     
-        if (cursors.up.isDown)
+        else if (cursors.up.isDown)
         {
             player.setVelocityY(-300);
             player.anims.play('deplacement', true);
         }
     
-        if (cursors.down.isDown)
+        else if (cursors.down.isDown)
         {
             player.setVelocityY(300);
             player.anims.play('deplacement', true);
@@ -232,23 +221,6 @@ class Scenethree extends Phaser.Scene{
         if (player.y >= 700){
             this.scene.start("scenedeux")
         }
-
-        const dynamite = Phaser.Input.Keyboard.JustDown(explosion.F);
-        if (comptobj3 == 1 && dynamite){
-            comptobj3 == 0
-            ennemi.disableBody(true, true);
-            etatennemi = 0
-        }
-
-        /*const tirgauche = Phaser.Input.Keyboard.JustDown(left.A);
-        const tirdroite = Phaser.Input.Keyboard.JustDown(right.D);
-        const tirbas = Phaser.Input.Keyboard.JustDown(down.S);
-        const tirhaut = Phaser.Input.Keyboard.JustDown(up.Z);
-        if (tirdroite){
-            console.log("test")
-            balle = this.physics.add.sprite(player.x, player.y, 'balle')
-            balle.setVelocityX(100);
-        }*/
 
         if (etatennemi == 0 && drop == 0){
             drop = 1
