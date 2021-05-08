@@ -47,8 +47,8 @@ class Scenethree extends Phaser.Scene{
         this.load.tilemapTiledJSON('carte', 'tiled/Carte2.json');
         this.load.image('tuile', 'assets/obstacles.png')
         this.load.image('fond', 'assets/sol.png');
-        this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 40, frameHeight: 40 });
-        this.load.spritesheet('ennemi', 'assets/monstre.png', { frameWidth: 21, frameHeight: 40 });
+        this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 46, frameHeight: 40 });
+        this.load.spritesheet('ennemi', 'assets/monstre.png', { frameWidth: 50, frameHeight: 50 });
         this.load.image('menu', 'assets/menu.png');
         this.load.image('key', 'assets/cle.png');
         this.load.image('trois', 'assets/trois.png');
@@ -57,9 +57,16 @@ class Scenethree extends Phaser.Scene{
         this.load.image('dead', 'assets/dead.png');
         this.load.image('finish', 'assets/finish.png')
         this.load.image('porte2','assets/porte3.png')
+        this.load.image('interbombon', 'assets/interface_bombe_active.png')
+        this.load.image('interbomboff', 'assets/interface_bombe_desactive.png')
+        this.load.image('interpoton', 'assets/interface_trousse_active.png')
+        this.load.image('interpotoff', 'assets/interface_trousse_desactive.png')
+        this.load.image('intercleon', 'assets/interface_cle_active.png')
+        this.load.image('intercleoff', 'assets/interface_cle_desactive.png')
     }
     
     create() {
+        console.log(comptobj1)
         scenearrive = 1
         this.add.image(640, 360, 'menu')
 
@@ -75,7 +82,7 @@ class Scenethree extends Phaser.Scene{
         etatennemi = 1
 
         fin = this.physics.add.sprite(1000, 580, 'finish') 
-        fin.setScale(0.6)
+        fin.setScale(1.5)
     
         player = this.physics.add.sprite(663, 690, 'perso');
         player.setCollideWorldBounds(true);
@@ -90,13 +97,22 @@ class Scenethree extends Phaser.Scene{
         utilpot = this.input.keyboard.addKeys('E');
 
         if (comptobj1 == 1){
-            textecle = this.add.text(20,20, "CLE")
+            this.afficheBomb = this.add.image(200, 50, 'interbombon')
+        }
+        else{
+            this.afficheBomb = this.add.image(200, 50, 'interbomboff')
         }
         if (comptobj2 == 1){
-            textepot = this.add.text(200,20, "POTION")
+            this.affichePot = this.add.image(350, 50, 'interpoton')
+        }
+        else{
+            this.affichePot = this.add.image(350, 50, 'interpotoff')
         }
         if (comptobj3 == 1){
-            textebomb = this.add.text(400,20, "BOMBE")
+            this.afficheCle = this.add.image(500, 50, 'intercleon')
+        }
+        else{
+            this.afficheCle = this.add.image(500, 50, 'intercleoff')
         }
 
         this.physics.add.collider(player, obstacles);
@@ -111,7 +127,7 @@ class Scenethree extends Phaser.Scene{
                 porte.destroy();
                 etatscene2 = 1
                 comptobj1 = 0
-                textecle.visible = false;
+                this.afficheCle = this.add.image(500, 50, 'intercleoff')
             }
         }
 
@@ -141,7 +157,7 @@ class Scenethree extends Phaser.Scene{
         function dropKey(player, cle){
             cle.disableBody(true, true);
             comptobj1 = 1;
-            this.add.text(20,20, "CLE")
+            this.afficheCle = this.add.image(500, 50, 'intercleon')
         }
 
         this.anims.create({
@@ -151,16 +167,30 @@ class Scenethree extends Phaser.Scene{
         });
 
         this.anims.create({
-            key: 'deplacement',
+            key: 'bas',
             frames: this.anims.generateFrameNumbers('perso', { start: 1, end: 2 }),
             frameRate: 5,
             repeat: -1
         });
 
         this.anims.create({
+            key: 'haut',
+            frames: this.anims.generateFrameNumbers('perso', { start: 3, end: 4 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'cote',
+            frames: this.anims.generateFrameNumbers('perso', { start:7, end: 8 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
             key: 'ennemi',
-            frames: this.anims.generateFrameNumbers('ennemi', { start: 0, end: 1 }),
-            frameRate: 2,
+            frames: this.anims.generateFrameNumbers('ennemi', { start: 0, end: 6 }),
+            frameRate: 10,
             repeat: -1
         });
     }
@@ -192,26 +222,26 @@ class Scenethree extends Phaser.Scene{
         {
             player.setVelocityX(300);
             player.setFlipX(false);
-            player.anims.play('deplacement', true);
+            player.anims.play('cote', true);
         }
     
         else if (cursors.left.isDown)
         {
             player.setVelocityX(-300);
             player.setFlipX(true);
-            player.anims.play('deplacement', true);
+            player.anims.play('cote', true);
         }
     
         else if (cursors.up.isDown)
         {
             player.setVelocityY(-300);
-            player.anims.play('deplacement', true);
+            player.anims.play('haut', true);
         }
     
         else if (cursors.down.isDown)
         {
             player.setVelocityY(300);
-            player.anims.play('deplacement', true);
+            player.anims.play('bas', true);
         }
 
         else {
@@ -231,7 +261,7 @@ class Scenethree extends Phaser.Scene{
         function dropKey(player, dropcle){
             dropcle.disableBody(true, true);
             comptobj1 = 1;
-            this.add.text(20,20, "CLÉ")
+            this.afficheCle = this.add.image(500, 50, 'intercleon')
         }
 
         if (ennemi.x <= 900){

@@ -32,6 +32,9 @@ var balle
 var timer = 0
 var inv = false
 var afficheVie
+var affichepot
+var affichebomb
+var affichecle
 
 class Scenefour extends Phaser.Scene{
     constructor(){
@@ -46,8 +49,8 @@ class Scenefour extends Phaser.Scene{
         this.load.image('tuile', 'assets/obstacles.png')
         this.load.image('door', 'assets/porte.png');
         this.load.image('fond', 'assets/sol.png');
-        this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 40, frameHeight: 40 });
-        this.load.spritesheet('ennemi', 'assets/monstre.png', { frameWidth: 21, frameHeight: 40 });
+        this.load.spritesheet('perso', 'assets/perso.png', { frameWidth: 46, frameHeight: 40 });
+        this.load.spritesheet('ennemi', 'assets/monstre.png', { frameWidth: 50, frameHeight: 50 });
         this.load.image('menu', 'assets/menu.png');
         this.load.image('bomb', 'assets/bombe.png');
         this.load.image('pot', 'assets/potion.png');
@@ -57,6 +60,12 @@ class Scenefour extends Phaser.Scene{
         this.load.image('deux', 'assets/deux.png');
         this.load.image('un', 'assets/un.png');
         this.load.image('dead', 'assets/dead.png');
+        this.load.image('interbombon', 'assets/interface_bombe_active.png');
+        this.load.image('interbomboff', 'assets/interface_bombe_desactive.png');
+        this.load.image('interpoton', 'interface_trousse_active.png');
+        this.load.image('interpotoff', 'interface_trousse_desactive.png');
+        this.load.image('intercleon', 'interface_cle_active.png');
+        this.load.image('intercleoff', 'assets/interface_cle_desactive.png.png');
     }
     
     create() {
@@ -74,7 +83,6 @@ class Scenefour extends Phaser.Scene{
         obstacles.setCollisionByExclusion(-1, true);
         portes.setCollisionByExclusion(-1, true)
     
-    
         ennemi3 = this.physics.add.sprite(900, 270, 'ennemi')
         ennemi3.setScale(1.2)
         ennemi3.anims.play('ennemi', true);
@@ -89,13 +97,22 @@ class Scenefour extends Phaser.Scene{
         player.body.setOffset(0, 20);
 
         if (comptobj1 == 1){
-            textecle = this.add.text(20,20, "CLE")
+            this.afficheBomb = this.add.image(200, 50, 'interbombon')
+        }
+        else{
+            this.afficheBomb = this.add.image(200, 50, 'interbomboff')
         }
         if (comptobj2 == 1){
-            textepot = this.add.text(200,20, "POTION")
+            this.affichePot = this.add.image(350, 50, 'interpoton')
+        }
+        else{
+            this.affichePot = this.add.image(350, 50, 'interpotoff')
         }
         if (comptobj3 == 1){
-            textebomb = this.add.text(400,20, "BOMBE")
+            this.afficheCle = this.add.image(500, 50, 'intercleon')
+        }
+        else{
+            this.afficheCle = this.add.image(500, 50, 'intercleoff')
         }
 
         if (etatpotion2 = 1){
@@ -124,7 +141,7 @@ class Scenefour extends Phaser.Scene{
             if (comptobj1 == 1){
                 tuilesportes.destroy(true);
                 comptobj1 = 0
-                textecle.visible = false;
+                this.afficheCle = this.add.image(500, 50, 'intercleoff')
             }
         }
 
@@ -151,13 +168,13 @@ class Scenefour extends Phaser.Scene{
             potion.disableBody(true, true);
             comptobj2 = 1;
             etatpotion2 = 0
-            textepot = this.add.text(200,20, "POTION")
+            this.affichePot = this.add.image(350, 50, 'interpoton')
         }
         function dropBomb(player, bombe){
             bombe.disableBody(true, true);
             comptobj3 = 1;
             etatbombe2 = 0
-            textebomb = this.add.text(400,20, "BOMBE")
+            this.afficheBomb = this.add.image(200, 50, 'interbombon')
         }
 
         /* Animations*/
@@ -169,16 +186,30 @@ class Scenefour extends Phaser.Scene{
         });
 
         this.anims.create({
-            key: 'deplacement',
+            key: 'bas',
             frames: this.anims.generateFrameNumbers('perso', { start: 1, end: 2 }),
             frameRate: 5,
             repeat: -1
         });
 
         this.anims.create({
+            key: 'haut',
+            frames: this.anims.generateFrameNumbers('perso', { start: 3, end: 4 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'cote',
+            frames: this.anims.generateFrameNumbers('perso', { start:7, end: 8 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
             key: 'ennemi',
-            frames: this.anims.generateFrameNumbers('ennemi', { start: 0, end: 1 }),
-            frameRate: 2,
+            frames: this.anims.generateFrameNumbers('ennemi', { start: 0, end: 6 }),
+            frameRate: 10,
             repeat: -1
         });
     }
@@ -209,26 +240,26 @@ class Scenefour extends Phaser.Scene{
         {
             player.setVelocityX(300);
             player.setFlipX(false);
-            player.anims.play('deplacement', true);
+            player.anims.play('cote', true);
         }
     
         else if (cursors.left.isDown)
         {
             player.setVelocityX(-300);
             player.setFlipX(true);
-            player.anims.play('deplacement', true);
+            player.anims.play('cote', true);
         }
     
         else if (cursors.up.isDown)
         {
             player.setVelocityY(-300);
-            player.anims.play('deplacement', true);
+            player.anims.play('haut', true);
         }
     
         else if (cursors.down.isDown)
         {
             player.setVelocityY(300);
-            player.anims.play('deplacement', true);
+            player.anims.play('bas', true);
         }
 
         else {
@@ -245,7 +276,7 @@ class Scenefour extends Phaser.Scene{
             ennemi3.disableBody(true, true);
             ennemi2.disableBody(true, true);
             etatennemi = 0
-            textebomb.visible = false;
+            this.afficheBomb = this.add.image(200, 50, 'interbomboff')
         }
 
         const heal = Phaser.Input.Keyboard.JustDown(utilpot.E);
@@ -253,7 +284,7 @@ class Scenefour extends Phaser.Scene{
             comptobj2 = 0
             vie = 3
             this.afficheVie = this.add.image(100, 100, 'trois')
-            textepot.visible = false;
+            this.affichePot = this.add.image(350, 50, 'interpotoff')
         }
 
         if (etatennemi == 0 && drop == 0){
@@ -265,7 +296,7 @@ class Scenefour extends Phaser.Scene{
         function dropKey(player, dropcle){
             dropcle.disableBody(true, true);
             comptobj1 = 1;
-            textecle = this.add.text(20,20, "CLÉ")
+            this.afficheCle = this.add.image(500, 50, 'intercleon')
         }
 
         if (ennemi3.y <= 270){
